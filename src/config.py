@@ -1,9 +1,17 @@
 """Configuración del pipeline de traducción de manga."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 import os
+import torch # Importamos torch para la detección
 
+def get_default_device():
+    """Detecta automáticamente CUDA, MPS (Mac) o CPU."""
+    if torch.cuda.is_available():
+        return 'cuda'
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        return 'mps'
+    return 'cpu'
 
 @dataclass
 class Config:
@@ -25,7 +33,9 @@ class Config:
     gemini_api_key: Optional[str] = None
     openrouter_api_key: Optional[str] = None
     openrouter_model: str = "meta-llama/llama-4-scout"
-    translation_device: str = 'cpu'
+    
+    # Dispositivo: Si es None, se detecta automáticamente
+    translation_device: str = field(default_factory=get_default_device)
 
     # OCR
     ocr_model_id: str = 'jzhang533/PaddleOCR-VL-For-Manga'
@@ -50,5 +60,4 @@ class Config:
             gemini_api_key=os.getenv('GEMINI_API_KEY'),
             openrouter_api_key=os.getenv('OPENROUTER_API_KEY'),
             openrouter_model=os.getenv('OPENROUTER_MODEL', 'meta-llama/llama-4-scout'),
-            # Los demás valores usan los defaults del dataclass
         )
