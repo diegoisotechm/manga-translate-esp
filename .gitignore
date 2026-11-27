@@ -1,0 +1,62 @@
+# --- Archivos sensibles y Configuración ---
+.env
+*.key
+credentials.json
+
+# --- Entornos Virtuales ---
+venv/
+env/
+.venv/
+ENV/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+
+# --- IDEs y Editores ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Jupyter Notebooks (Colab) ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Archivos de Imagen y Datos (No subir inputs/outputs pesados) ---
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.bmp
+*.tiff
+
+# --- Modelos Pesados y Caché ---
+models/
+*.pt
+*.bin
+*.onnx
+.huggingface/
+cache/
+
+# --- Sistema Operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
