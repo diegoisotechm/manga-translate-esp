@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI para traducir páginas de manga de japonés a español (Gemini).
+CLI para traducir páginas de manga de japonés a español (OpenRouter principal, respaldo Gemini).
 """
 
 import argparse
@@ -39,7 +39,7 @@ DEFAULT_DEVICE = get_default_device()
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Traduce páginas de manga de japonés a español usando Gemini",
+        description="Traduce páginas de manga de japonés a español usando OpenRouter (respaldo: Gemini)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ejemplos:
@@ -49,8 +49,8 @@ Ejemplos:
   # Traducir una carpeta en modo batch
   python -m src.main input/ --batch --output output
 
-  # Sobrescribir la API key del .env
-  python -m src.main input/page1.png --api-key "OTRA_CLAVE"
+  # Sobrescribir la API key de OpenRouter del .env
+  python -m src.main input/page1.png --openrouter-key "OTRA_CLAVE"
         """
     )
 
@@ -90,17 +90,17 @@ Ejemplos:
     parser.add_argument('--ocr-max-tokens', type=int, default=2048,
                         help='Máximo de tokens para OCR')
 
-    # Traducción (Gemini)
-    parser.add_argument('--api-key', type=str,
-                        default=os.environ.get("GEMINI_API_KEY"),
-                        help='API Key de Google Gemini (o variable de entorno GEMINI_API_KEY)')
+    # Traducción (OpenRouter principal, Gemini respaldo)
     parser.add_argument('--openrouter-key', type=str,
                         default=os.environ.get("OPENROUTER_API_KEY"),
-                        help='API Key de OpenRouter (respaldo si Gemini falla)')
+                        help='API Key de OpenRouter (motor principal, o variable OPENROUTER_API_KEY)')
     parser.add_argument('--openrouter-model', type=str,
                         default=os.environ.get("OPENROUTER_MODEL",
                                                "meta-llama/llama-4-scout"),
-                        help='Modelo de OpenRouter para el respaldo')
+                        help='Modelo de OpenRouter para traducción principal')
+    parser.add_argument('--api-key', type=str,
+                        default=os.environ.get("GEMINI_API_KEY"),
+                        help='API Key de Google Gemini (respaldo si OpenRouter falla, o GEMINI_API_KEY)')
 
     # Salidas
     parser.add_argument('--save-all', action='store_true',
@@ -174,13 +174,16 @@ def main():
     if not validate_args(args):
         sys.exit(1)
 
-    if not args.api_key:
-        print("Error: se requiere GEMINI_API_KEY en .env o --api-key", file=sys.stderr)
+    if not args.openrouter_key and not args.api_key:
+        print("Error: se requiere OPENROUTER_API_KEY (o --openrouter-key) en .env", file=sys.stderr)
         sys.exit(1)
 
     if not args.openrouter_key:
         print("Advertencia: no se encontró OPENROUTER_API_KEY. "
-              "Si Gemini falla por filtro de seguridad, no habrá respaldo.", file=sys.stderr)
+              "Se usará Gemini directamente como motor.", file=sys.stderr)
+    elif not args.api_key:
+        print("Advertencia: no se encontró GEMINI_API_KEY. "
+              "Si OpenRouter falla, no habrá respaldo.", file=sys.stderr)
 
     if args.save_all:
         save_speech_bubbles = True
@@ -218,7 +221,7 @@ def main():
 
     console = Console(quiet=args.quiet)
 
-    console.info("Traductor de manga (Gemini → español)")
+    console.info("Traductor de manga (OpenRouter → español, respaldo Gemini)")
     console.info(f"Dispositivo OCR: {args.device.upper()}")
     console.info(f"Salida: {args.output}")
     if args.batch:
